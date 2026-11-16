@@ -28,9 +28,14 @@ export type Env = z.infer<typeof schema>
 
 let cached: Env | null = null
 
+/** Variáveis definidas porém vazias (ex.: `CHAVE=` no .env) são tratadas como ausentes. */
+function readEnv(): Record<string, string | undefined> {
+  return Object.fromEntries(Object.entries(process.env).map(([k, v]) => [k, v === undefined || v.trim() === '' ? undefined : v.trim()]))
+}
+
 export function env(): Env {
   if (cached && process.env.NODE_ENV !== 'test') return cached
-  const parsed = schema.safeParse(process.env)
+  const parsed = schema.safeParse(readEnv())
   if (!parsed.success) {
     const fields = parsed.error.issues.map((i) => i.path.join('.')).join(', ')
     throw new Error(`Configuração de ambiente inválida: ${fields}`)
@@ -52,6 +57,29 @@ export function sessionSecret(): string {
 
 export function isDemoMode(): boolean {
   return env().DATA_BACKEND === 'demo'
+}
+
+/**
+ * Problemas de configuração que impedem o funcionamento (somente nomes de
+ * variáveis — nunca valores). Exibidos numa página de orientação ao operador.
+ */
+export function configurationProblems(): string[] {
+  const parsed = schema.safeParse(readEnv())
+  if (!parsed.success) {
+    return parsed.error.issues.map((i) => `Variável ${i.path.join('.')} com valor inválido.`)
+  }
+  const e = parsed.data
+  const problems: string[] = []
+  if (e.DATA_BACKEND === 'supabase') {
+    if (!e.NEXT_PUBLIC_SUPABASE_URL) problems.push('NEXT_PUBLIC_SUPABASE_URL não definida (obrigatória com DATA_BACKEND=supabase).')
+    if (!e.NEXT_PUBLIC_SUPABASE_ANON_KEY) problems.push('NEXT_PUBLIC_SUPABASE_ANON_KEY não definida (obrigatória com DATA_BACKEND=supabase).')
+  } else if (e.NODE_ENV === 'production') {
+    if (e.ALLOW_DEMO_IN_PRODUCTION !== 'true') {
+      problems.push('DATA_BACKEND não é "supabase" e o modo demonstração não está autorizado (ALLOW_DEMO_IN_PRODUCTION=true).')
+    }
+    if (!e.SESSION_SECRET || e.SESSION_SECRET.length < 32) problems.push('SESSION_SECRET ausente ou com menos de 32 caracteres.')
+  }
+  return problems
 }
 
 /** Garante que o modo demonstração não seja usado em produção sem autorização explícita. */
