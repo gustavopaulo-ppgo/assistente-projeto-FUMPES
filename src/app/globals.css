@@ -1,0 +1,50 @@
+@import 'tailwindcss';
+
+/* Cores institucionais configuráveis: --brand e --brand-accent são
+   sobrescritas em tempo de execução a partir das configurações do sistema. */
+:root {
+  --brand: #1f3a5f;
+  --brand-accent: #b8892b;
+  --surface: #f4f6f9;
+  --ink: #1b2430;
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-accent: var(--brand-accent);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --font-sans: ui-sans-serif, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+html,
+body {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* foco visível e consistente (acessibilidade) */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 70%, white);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  background: white;
+  padding: 0.5rem 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

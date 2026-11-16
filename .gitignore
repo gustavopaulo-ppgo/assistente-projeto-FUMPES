@@ -1,0 +1,28 @@
+# dependências
+node_modules/
+# build
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+# ambiente — NUNCA versionar segredos
+.env
+.env.local
+.env.*.local
+.env.production
+!.env.example
+# dados locais do modo demonstração
+.data/
+# supabase local
+supabase/.temp/
+supabase/.branches/
+# sistema
+.DS_Store
+Thumbs.db
+*.log
+.vercel
+# playwright
+test-results/
+playwright-report/
+next-env.d.ts
